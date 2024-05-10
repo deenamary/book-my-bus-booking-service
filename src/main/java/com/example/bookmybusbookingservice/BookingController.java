@@ -42,30 +42,33 @@ public class BookingController {
     @PostMapping("add/booking")
     public ResponseEntity<String> addBusInventory(@RequestBody Booking booking, BookingMessage bookingMessage)
     {
+        logger.info("Booking request received: " + booking);
+
         //Fetch available seats for the bus
         BusInventory busInventory;
-        try {
+       try {
             busInventory = webClientBuilder.build().get().uri(inventory_service_url + booking.getBusId())
                     .retrieve()
                     .bodyToMono(BusInventory.class)
                     .block();
             logger.info("Fetched bus inventory details {}", busInventory);
         }catch(Exception ex){
+           logger.warn("Exception occured while fetching inventory details from inventory service "+ex.getMessage());
             return ResponseEntity.badRequest().body("Could not fetch inventory details");
         }
-
-        if(!Objects.isNull(busInventory)&&busInventory.getAvailableSeats()>=booking.getNoOfSeats()) {
-
+        if(Objects.requireNonNull(busInventory).getAvailableSeats()>=booking.getNoOfSeats()) {
+            logger.info("Seats are available.Proceeding with booking");
             String bookingId = UUID.randomUUID().toString();
             booking.setBookingId(bookingId);
             booking.setBookingDate(new Date());
             booking.setStatus("PENDING");
             bookingRepository.save(booking);
-            logger.info("Booking {} has been saved", bookingId);
+            logger.info("Booking {} has been saved", booking);
 
-            //Send message to Kafka
+            //Send message to Kafka booking topic
             bookingMessage.setBookingId(bookingId);
             bookingMessage.setNoOfSeats(booking.getNoOfSeats());
+            bookingMessage.setBusId(booking.getBusId());
             ObjectMapper mapper = new ObjectMapper();
             try {
                 String message = mapper.writeValueAsString(bookingMessage);
@@ -78,7 +81,8 @@ public class BookingController {
 
             return ResponseEntity.ok("Booking successful with booking id "+bookingId+" and status PENDING");
         }else{
-            return ResponseEntity.ok("Requested number of seats not available for bus "+booking.getBusId());
+            logger.warn("Could not process booking request as requested number of seats are not available");
+            return ResponseEntity.ok("Requested number of seats are not available for bus "+booking.getBusId());
         }
     }
 

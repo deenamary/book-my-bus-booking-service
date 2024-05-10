@@ -1,12 +1,16 @@
 package com.example.bookmybusbookingservice;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Component;
 
 @Component
 public class KafkaProducer {
+
     private final KafkaTemplate<String, String> kafkaTemplate;
-    private final String TOPIC_NAME; // Replace with your desired topic name
+    private final String TOPIC_NAME;
+    Logger logger = LoggerFactory.getLogger(KafkaProducer.class);
 
     public KafkaProducer(KafkaTemplate<String, String> kafkaTemplate,
                          String kafka_topic) {
@@ -16,7 +20,6 @@ public class KafkaProducer {
 
     public void sendMessage(String message) {
         kafkaTemplate.send(TOPIC_NAME, message);
-        System.out.println("Message " + message +
-                " has been sucessfully sent to the topic: " + TOPIC_NAME);
+        logger.info("Message {} has been successfully sent to the topic: {}" ,message, TOPIC_NAME);
     }
 }

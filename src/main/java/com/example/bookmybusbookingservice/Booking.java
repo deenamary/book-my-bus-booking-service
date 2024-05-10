@@ -89,4 +89,16 @@ public class Booking {
         this.status = status;
     }
 
+    @Override
+    public String toString() {
+        return "Booking{" +
+                "bookingId='" + bookingId + '\'' +
+                ", busId='" + busId + '\'' +
+                ", source='" + source + '\'' +
+                ", destination='" + destination + '\'' +
+                ", noOfSeats=" + noOfSeats +
+                ", bookingDate=" + bookingDate +
+                ", status='" + status + '\'' +
+                '}';
+    }
 }
