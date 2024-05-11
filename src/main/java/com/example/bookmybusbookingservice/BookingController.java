@@ -2,6 +2,7 @@ package com.example.bookmybusbookingservice;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import jakarta.transaction.Transactional;
 import jakarta.ws.rs.BadRequestException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -39,6 +40,7 @@ public class BookingController {
         this.webClientBuilder = webClientBuilder;
     }
 
+    @Transactional
     @PostMapping("add/booking")
     public ResponseEntity<String> addBusInventory(@RequestBody Booking booking, BookingMessage bookingMessage)
     {

@@ -12,6 +12,7 @@ import java.util.UUID;
 public class KafkaConsumer {
 
     public static final String CONFIRMED = "CONFIRMED";
+    public static final String FAILED = "FAILED";
     private final BookingRepository bookingRepository;
     PassengerRepository passengerRepository;
 
@@ -37,4 +38,16 @@ public class KafkaConsumer {
         logger.info("Saved passenger details {}",passenger);
 
     }
+
+    @KafkaListener(topics = "book-my-bus-payment-failure-topic", groupId = "console-consumer-68654")
+    public void consumePaymentFailureMessage(String message) throws JsonProcessingException {
+        logger.info("Received payment failure message: {}", message);
+        logger.info("Proceeding with marking booking {} as FAILED",message);
+        String bookingId = message;
+        bookingRepository.updateStatusByBookingId(FAILED,bookingId);
+        logger.info("Updated booking status to {} for Booking ID: {}" ,FAILED, bookingId);
+
+    }
+
+
 }
