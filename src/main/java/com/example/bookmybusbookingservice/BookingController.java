@@ -25,19 +25,19 @@ public class BookingController {
 
     private  BookingRepository bookingRepository;
     private KafkaProducer kafkaProducer;
-    private  String inventory_service_url;
-    private WebClient.Builder webClientBuilder;
+    private String bookingTopicName;
+    private BusInventoryService busInventoryService;
 
     Logger logger = LoggerFactory.getLogger(BookingController.class);
 
     BookingController(BookingRepository bookingRepository,
                       KafkaProducer kafkaProducer,
-                      String inventory_service_url,
-                      WebClient.Builder webClientBuilder) {
+                      BusInventoryService busInventoryService,
+                      String kafka_topic) {
         this.bookingRepository = bookingRepository;
         this.kafkaProducer = kafkaProducer;
-        this.inventory_service_url = inventory_service_url;
-        this.webClientBuilder = webClientBuilder;
+        this.busInventoryService = busInventoryService;
+        this.bookingTopicName = kafka_topic;
     }
 
     @Transactional
@@ -48,17 +48,14 @@ public class BookingController {
 
         //Fetch available seats for the bus
         BusInventory busInventory;
+        int availableSeats;
        try {
-            busInventory = webClientBuilder.build().get().uri(inventory_service_url + booking.getBusId())
-                    .retrieve()
-                    .bodyToMono(BusInventory.class)
-                    .block();
-            logger.info("Fetched bus inventory details {}", busInventory);
+            availableSeats = busInventoryService.getAvailableSeats(booking.getBusId());
         }catch(Exception ex){
-           logger.warn("Exception occured while fetching inventory details from inventory service "+ex.getMessage());
+           logger.warn("Exception occurred while fetching inventory details from inventory service {}", ex.getMessage());
             return ResponseEntity.badRequest().body("Could not fetch inventory details");
         }
-        if(Objects.requireNonNull(busInventory).getAvailableSeats()>=booking.getNoOfSeats()) {
+        if(availableSeats>=booking.getNoOfSeats()) {
             logger.info("Seats are available.Proceeding with booking");
             String bookingId = UUID.randomUUID().toString();
             booking.setBookingId(bookingId);
@@ -74,7 +71,7 @@ public class BookingController {
             ObjectMapper mapper = new ObjectMapper();
             try {
                 String message = mapper.writeValueAsString(bookingMessage);
-                kafkaProducer.sendMessage(message);
+                kafkaProducer.sendMessage(bookingTopicName,message);
                 logger.info("Successfully sent the booking message {}", message);
             } catch (JsonProcessingException e) {
                 logger.error(e.getMessage());

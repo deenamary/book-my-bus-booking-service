@@ -11,6 +11,9 @@ public class AppConfig {
     @Value("${kafka.topic.name}")
     String topicname;
 
+    @Value("${kafka.booking.confirmation.failure.topic.name}")
+    String bookingConfirmationFailureTopicName;
+
     @Value("${gateway.server.hostname}")
     String hostname;
 
@@ -20,9 +23,17 @@ public class AppConfig {
     @Value("${bmb.inventory.getbusinventory.path}")
     String busInventoryPath;
 
+    @Value("${bmb.busroute.getbusroute.path}")
+    String busRoutePath;
+
     @Bean("inventory_service_url")
     String getInventoryServiceUrl() {
         return "http://" + hostname + ":" + portnumber+busInventoryPath;
+    }
+
+    @Bean("admin_service_url")
+    String getAdminServiceUrl() {
+        return "http://" + hostname + ":" + portnumber+busRoutePath;
     }
 
     @Bean
@@ -33,5 +44,10 @@ public class AppConfig {
     @Bean("kafka_topic")
     String getBookingKafkaTopic() {
         return topicname;
+    }
+
+    @Bean("booking_confirmation_failure_topic")
+    String getBookingConfirmationFailureTopicName() {
+        return bookingConfirmationFailureTopicName;
     }
 }

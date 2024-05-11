@@ -9,17 +9,14 @@ import org.springframework.stereotype.Component;
 public class KafkaProducer {
 
     private final KafkaTemplate<String, String> kafkaTemplate;
-    private final String TOPIC_NAME;
     Logger logger = LoggerFactory.getLogger(KafkaProducer.class);
 
-    public KafkaProducer(KafkaTemplate<String, String> kafkaTemplate,
-                         String kafka_topic) {
+    public KafkaProducer(KafkaTemplate<String, String> kafkaTemplate) {
         this.kafkaTemplate = kafkaTemplate;
-        this.TOPIC_NAME=kafka_topic;
     }
 
-    public void sendMessage(String message) {
-        kafkaTemplate.send(TOPIC_NAME, message);
-        logger.info("Message {} has been successfully sent to the topic: {}" ,message, TOPIC_NAME);
+    public void sendMessage(String topicName,String message) {
+        kafkaTemplate.send(topicName, message);
+        logger.info("Message {} has been successfully sent to the topic: {}" ,message, topicName);
     }
 }
